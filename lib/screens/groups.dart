@@ -665,7 +665,7 @@ class InvitationsPage extends StatelessWidget {
                   icon: Icon(Icons.email),
                   onPressed: () {
                     String userId = users[index].id;
-                    String groupId = groupDoc.id;
+                    //String groupId = groupDoc.id;
                     addInvitation(email, userId);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
