@@ -30,7 +30,7 @@ class CreateGroupPage extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: userId != null ? MyGroupsList(userId) : CircularProgressIndicator(), // Display user's groups list or loading indicator
+                child: userId != null ? MyGroupsList(userId) : CircularProgressIndicator(), 
               ),
             ],
           ),
@@ -50,8 +50,8 @@ class CreateGroupPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 120, // Adjust position as needed
-            left: 16, // Adjust position as needed
+            bottom: 120, 
+            left: 16, 
             child: FloatingActionButton(
               heroTag: 'invite_people_fab',
               onPressed: () {
@@ -113,7 +113,7 @@ class CreateNewGroupPage extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Group created successfully!'),
-                        duration: Duration(seconds: 2), // Adjust duration as needed
+                        duration: Duration(seconds: 2), 
                       ),
                     );
                     // Show a success message or navigate back to previous page
@@ -154,7 +154,7 @@ class MyGroupsList extends StatelessWidget {
 
         List<QueryDocumentSnapshot<Map<String, dynamic>>> groupDocs = snapshot.data!.docs;
 
-        // Filter groups where the current user is a member
+        
         List<QueryDocumentSnapshot<Map<String, dynamic>>> userGroups = groupDocs.where((groupDoc) {
           List<dynamic> users = groupDoc['users'];
           return users.contains(userId);
@@ -685,10 +685,10 @@ class InvitationsPage extends StatelessWidget {
 
 
   void addInvitation(String email, String userId) async {
-    // Get the group ID from the groupDoc
+    
     String groupId = groupDoc.id;
 
-    // Reference to the user's document
+    
     DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
 
     // Get the current invitations array of the user
