@@ -8,7 +8,7 @@ class SignUpPage extends StatelessWidget {
   TextEditingController passwordController = TextEditingController();
   TextEditingController emailController = TextEditingController();
 
-  // Initialize Firebase Auth
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   SignUpPage({super.key});
@@ -36,7 +36,7 @@ class SignUpPage extends StatelessWidget {
       await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
         'username': username,
          'currentLocation':'',
-         // Initialize locations as an empty list
+        
       });
 
       // Sign-up successful
@@ -87,7 +87,7 @@ class SignUpPage extends StatelessWidget {
             TextField(
               controller: usernameController,
               decoration: const InputDecoration(
-                labelText: 'Username', // Add label for username
+                labelText: 'Username',
               ),
             ),
             TextField(
