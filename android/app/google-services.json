@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "28896068278",
+    "project_id": "checkiin",
+    "storage_bucket": "checkiin.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:28896068278:android:94b9bdec8a43a219fd5c17",
+        "android_client_info": {
+          "package_name": "com.example.checkiin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwKJhKyuMuh2DV1thg6m2_x5V_RD_VK8E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
