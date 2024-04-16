@@ -10,12 +10,11 @@ class UpdateDataPage extends StatefulWidget {
 class _UpdateDataState extends State<UpdateDataPage> {
   final _auth = FirebaseAuth.instance;
   final _formKey = GlobalKey<FormState>();
-  String? _username; // Add variable to store the username
-
+  String? _username; 
   @override
   void initState() {
     super.initState();
-    _fetchUsername(); // Fetch username when the widget is initialized
+    _fetchUsername(); 
   }
 
   // Function to fetch the username from Firestore
@@ -23,10 +22,10 @@ class _UpdateDataState extends State<UpdateDataPage> {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        // Retrieve user data from Firestore
+       
         DocumentSnapshot userData = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         setState(() {
-          _username = userData['username']; // Set the username variable
+          _username = userData['username']; 
         });
       }
     } catch (e) {
@@ -48,7 +47,7 @@ class _UpdateDataState extends State<UpdateDataPage> {
           children: [
             Center(
               child: TextFormField(
-                decoration: InputDecoration(labelText: 'Username', hintText: _username ?? 'Username'), // Use fetched username
+                decoration: InputDecoration(labelText: 'Username', hintText: _username ?? 'Username'), 
                 readOnly: true,
                 onTap: () {
                   Navigator.push(
@@ -64,8 +63,7 @@ class _UpdateDataState extends State<UpdateDataPage> {
                     }
                   });
 
-                  // Navigate to the page for editing username
-                  // Use Navigator.push to navigate to the edit page
+                 
                 },
               ),
             ),
@@ -82,8 +80,7 @@ class _UpdateDataState extends State<UpdateDataPage> {
                       ),
                   );
 
-                  // Navigate to the page for editing email
-                  // Use Navigator.push to navigate to the edit page
+                 
                 },
               ),
             ),
@@ -94,8 +91,7 @@ class _UpdateDataState extends State<UpdateDataPage> {
                   context,
                   MaterialPageRoute(builder: (context) => UpdatePasswordPage()),
                 );
-                // Navigate to the page for editing password
-                // Use Navigator.push to navigate to the edit page
+               
               },
               child: Text('Change Password'),
             ),
@@ -110,7 +106,7 @@ class _UpdateDataState extends State<UpdateDataPage> {
 
 
 class EditUsernamePage extends StatefulWidget {
-  final String currentUsername; // Current username passed from the profile page
+  final String currentUsername; \
 
   EditUsernamePage({required this.currentUsername});
 
