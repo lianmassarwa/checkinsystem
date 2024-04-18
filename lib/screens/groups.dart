@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:open_street_map_search_and_pick/open_street_map_search_and_pick.dart';
+
 class CreateGroupPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,7 @@ class CreateGroupPage extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: userId != null ? MyGroupsList(userId) : CircularProgressIndicator(), 
+                child: userId != null ? MyGroupsList(userId) : CircularProgressIndicator(),
               ),
             ],
           ),
@@ -50,8 +52,8 @@ class CreateGroupPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 120, 
-            left: 16, 
+            bottom: 120,
+            left: 16,
             child: FloatingActionButton(
               heroTag: 'invite_people_fab',
               onPressed: () {
@@ -71,12 +73,28 @@ class CreateGroupPage extends StatelessWidget {
   }
 }
 
+class LocationData {
 
+  Map<String ,dynamic> address;
+  final String addressName;
 
+  LocationData({
 
+    required this.address,
+    required this.addressName,
+  });
+}
 
-class CreateNewGroupPage extends StatelessWidget {
+class CreateNewGroupPage extends StatefulWidget {
+  const CreateNewGroupPage({Key? key}) : super(key: key);
+
+  @override
+  _CreateNewGroupPageState createState() => _CreateNewGroupPageState();
+}
+
+class _CreateNewGroupPageState extends State<CreateNewGroupPage> {
   final TextEditingController groupNameController = TextEditingController();
+  LocationData? pickedLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -84,42 +102,80 @@ class CreateNewGroupPage extends StatelessWidget {
       appBar: AppBar(
         title: Text('Create New Group'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
               controller: groupNameController,
               decoration: InputDecoration(labelText: 'Group Name'),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              // Navigate to the location selection page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MyMapPage(),
+                ),
+              ).then((pickedData) {
+                // Handle the picked data when returning from the map page
+                setState(() {
+                  pickedLocation = pickedData;
+                });
+              });
+            },
+            child: Text('Select Location'),
+          ),
+          Spacer(), // Use Spacer to push the button to the bottom
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
               onPressed: () async {
                 // Get the current user's ID
                 User? user = FirebaseAuth.instance.currentUser;
                 if (user != null) {
                   String userId = user.uid;
-
                   String groupName = groupNameController.text;
+                  if (groupName.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please enter a group name.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
+                  if (pickedLocation == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Please select a location.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
                   try {
-
                     await FirebaseFirestore.instance.collection('groups').add({
                       'groupName': groupName,
-                      'grouplocation' : '',
-                      'users' : [userId],
-                      'checkedInUsers' :[],
+                      'groupLocation': {
+                        'address': pickedLocation!.address,
+                        'addressName': pickedLocation!.addressName,
+                      },
+                      'users': [userId],
+                      'checkedInUsers': [],
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Group created successfully!'),
-                        duration: Duration(seconds: 2), 
+                        duration: Duration(seconds: 2),
                       ),
                     );
-                    // Show a success message or navigate back to previous page
                   } catch (e) {
                     print('Error creating group: $e');
-                    // Show an error message to the user
                   }
                 } else {
                   print('No user signed in.');
@@ -127,12 +183,46 @@ class CreateNewGroupPage extends StatelessWidget {
               },
               child: Text('Create Group'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
+class MyMapPage extends StatefulWidget {
+  const MyMapPage({Key? key}) : super(key: key);
+
+  @override
+  State<MyMapPage> createState() => _MyMapPageState();
+}
+
+class _MyMapPageState extends State<MyMapPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Map Page'),
+      ),
+      body: OpenStreetMapSearchAndPick(
+        buttonColor: Colors.blue,
+        buttonText: 'Set Location',
+        onPicked: (pickedData) {
+          // Navigate back to the create page and pass the picked data
+          Navigator.pop(
+            context,
+            LocationData(
+
+              address: pickedData.address,
+              addressName: pickedData.addressName,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 
 class MyGroupsList extends StatelessWidget {
   final String userId;
@@ -154,7 +244,7 @@ class MyGroupsList extends StatelessWidget {
 
         List<QueryDocumentSnapshot<Map<String, dynamic>>> groupDocs = snapshot.data!.docs;
 
-        
+
         List<QueryDocumentSnapshot<Map<String, dynamic>>> userGroups = groupDocs.where((groupDoc) {
           List<dynamic> users = groupDoc['users'];
           return users.contains(userId);
@@ -194,6 +284,7 @@ class GroupDetails extends StatefulWidget {
 class _GroupDetailsState extends State<GroupDetails> {
   String? currentUserId;
   late bool isCheckedIn = false;
+  String? groupAddressName;
 
   @override
   void initState() {
@@ -206,7 +297,25 @@ class _GroupDetailsState extends State<GroupDetails> {
         checkIsCheckedIn();
       }
     });
+    getGroupAddressName();
   }
+
+  void getGroupAddressName() async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> groupSnapshot =
+      await widget.groupDoc.reference.get();
+      if (groupSnapshot.exists) {
+        Map<String, dynamic> groupData = groupSnapshot.data()!;
+        Map<String, dynamic> groupLocation = groupData['groupLocation'];
+        setState(() {
+          groupAddressName = groupLocation['addressName'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching group address name: $e');
+    }
+  }
+
 
   void checkIsCheckedIn() async {
     if (currentUserId != null) {
@@ -273,7 +382,7 @@ class _GroupDetailsState extends State<GroupDetails> {
           }
 
           Map<String, dynamic> groupData = snapshot.data!.data()!;
-
+          String addressName = groupData['groupLocation']['addressName'];
           List<dynamic> userIds = groupData['users'];
           List<dynamic> checkedInUsers = groupData['checkedInUsers'];
 
@@ -282,6 +391,11 @@ class _GroupDetailsState extends State<GroupDetails> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  'Group Address: ${addressName?? 'Unknown'}', // Display the group address name
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -521,7 +635,7 @@ class InvitationsPage extends StatelessWidget {
                       subtitle: Text(invitation['senderId'] ?? 'No Sender ID'),
                       trailing: ElevatedButton(
                         onPressed: () {
-                          // Handle accepting invitation
+
                         },
                         child: Text('Accept'),
                       ),
@@ -534,7 +648,7 @@ class InvitationsPage extends StatelessWidget {
                       subtitle: Text(invitation['senderId'] ?? 'No Sender ID'),
                       trailing: ElevatedButton(
                         onPressed: () {
-                          // Handle accepting invitation
+
                         },
                         child: Text('Accept'),
                       ),
@@ -552,7 +666,7 @@ class InvitationsPage extends StatelessWidget {
                           subtitle: Text('Loading...'),
                           trailing: ElevatedButton(
                             onPressed: () {
-                              // Handle accepting invitation
+
                             },
                             child: Text('Accept'),
                           ),
@@ -566,7 +680,7 @@ class InvitationsPage extends StatelessWidget {
                           subtitle: Text('Error loading username'),
                           trailing: ElevatedButton(
                             onPressed: () {
-                              // Handle accepting invitation
+
                             },
                             child: Text('Accept'),
                           ),
@@ -665,7 +779,7 @@ class InvitationsPage extends StatelessWidget {
                   icon: Icon(Icons.email),
                   onPressed: () {
                     String userId = users[index].id;
-                    //String groupId = groupDoc.id;
+                    String groupId = groupDoc.id;
                     addInvitation(email, userId);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -685,24 +799,22 @@ class InvitationsPage extends StatelessWidget {
 
 
   void addInvitation(String email, String userId) async {
-    
-    String groupId = groupDoc.id;
 
-    
+    String groupId = groupDoc.id;
     DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
 
     // Get the current invitations array of the user
     DocumentSnapshot userSnapshot = await userRef.get();
     List<dynamic> invitations = (userSnapshot.data() as Map<String, dynamic>)['invitations'] ?? [];
     String? senderId = FirebaseAuth.instance.currentUser?.uid;
-    // Add the new invitation to the invitations array
+
     Map<String, dynamic> newInvitation = {
       'senderId': senderId,
       'groupId': groupId,
     };
     invitations.add(newInvitation);
 
-    // Update the invitations array in Firestore
+
     await userRef.update({'invitations': invitations});
   }
 
